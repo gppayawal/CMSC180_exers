@@ -1,3 +1,6 @@
+/**
+ * gcc lab02.c -lpthread
+ **/
 #include<stdio.h>
 #include<stdlib.h>
 #include<pthread.h>
@@ -5,41 +8,49 @@
 typedef struct th_args{
 	int t_id;
 	int n;
-	int t;
+	int nSubmatrix;
 	int ***submat;
+	int *v;
 } th_args;
 
 void * column_sum(void *arg){
-	th_args *data = (th_args *) arg;
-	int *v;
-	/*int row, col;
-	int *v;
+	th_args *th_data = (th_args *) arg;
+	int row, col;
+	(th_data->v) = (int *)malloc(th_data->nSubmatrix*sizeof(int));
 
-	v = (int *)malloc(n*sizeof(int));
-
-	for(row = 0; row < n; row++){
-	v[row] = 0;
-	for(col = 0; col < n; col++){
-		v[row] = v[row] + m[col][row];
+	for(row = 0; row < th_data->nSubmatrix; row++){
+		for(col = 0; col < th_data->n; col++){
+			th_data->v[row] = th_data->v[row] + (*th_data->submat)[col][row];
+		}
 	}
-	}*/
-	return v;
+
+	// for(row = 0; row < th_data->nSubmatrix; row++){
+	// 		printf("row %d, id %d: %d\n", row, th_data->t_id, th_data->v[row]);
+	// }
+
+	return NULL;
 }
 
 void main(){
-	int n, t; //size of square matrix, number of threads
+	int n, t, nSubmatrix; //size of square matrix, number of threads
 	int **m; //matrix
 	int ***submatrix;
-	int *v;	//column sums
+	int **v;	//column sums
 	int i, j, row, col;
-	pthread_t thread[t];
-	th_args th_data[t];
+	clock_t begin, end;
+	double elapsed;
 
 	printf("Enter size of matrix: ");
 	scanf("%d", &n);
 	printf("Enter number of threads: ");
 	scanf("%d", &t);
 
+	pthread_t thread[t];
+	th_args *th_data;
+
+	nSubmatrix = n/t;
+	// if odd # of n
+	if(n > nSubmatrix*t) nSubmatrix++;
 
 	//Initialize arrays
 	m = (int **)malloc(n*sizeof(int *) );
@@ -51,14 +62,16 @@ void main(){
 	for(i = 0; i < t; i++){
 		submatrix[i] = (int **)malloc(n*sizeof(int *));
 		for(j = 0; j < n; j++){
-			submatrix[i][j] = (int *)malloc((n/t)*sizeof(int));
+			submatrix[i][j] = (int *)malloc((nSubmatrix/t)*sizeof(int));
 		}
 	}
 
-	v = (int *)malloc(n*sizeof(int));
-	for(i = 0; i < n; i++){
-		v[i] = 0;
+	v = (int **)malloc(t*sizeof(int *));
+	for(i = 0; i < t; i++){
+		v[i] = (int *)malloc(nSubmatrix*sizeof(int));
 	}
+
+	th_data = (th_args *)malloc(t*sizeof(th_args));
 
 	//Generate random number for the matrix
 	srand(time(NULL));
@@ -71,77 +84,81 @@ void main(){
 	//Generate submatrices
 	for(i = 0; i < t; i++){
 		for(row = 0; row < n; row++){
-			for(col = 0; col < n/t; col++){
-				submatrix[i][row][col] = m[row][col+(i*(n/t))];   			
+			for(col = 0; col < nSubmatrix; col++){
+				submatrix[i][row][col] = m[row][col+(i*(nSubmatrix))];
 			}
 		}
 	}
+
+	//Print matrix
+	// for(row = 0; row < n; row++){
+	// 	for(col = 0; col < n; col++){
+	// 		printf("%3d", m[row][col]);
+	// 	}
+	// 	printf("\n");
+	// }
+
+	//Print submatrix
+	// int p,q,r;
+	// for(p = 0; p < t; p++){
+	// 	for(q = 0; q < n; q++){
+	// 		for(r = 0; r < nSubmatrix; r++){
+	// 			printf("%3d", submatrix[p][q][r]);
+	// 		}
+	// 		printf("\n");
+	// 	}
+	// 	printf("\n");
+	// }
 
 	//Initialize **submat of thread arguments, not sure if correct and needed
 	for(i = 0; i < t; i++){
-		th_data[i].submat = (int ***)malloc(t*sizeof(int **));
-		for(i = 0; i < n; i++){
-			th_data[i].submat[i] = (int **)malloc(n*sizeof(int *));
-			for(j = 0; j < n/t; j++){
-				th_data[i].submat[i][j] = (int *)malloc((n/t)*sizeof(int));
-			}
-		}
-	}
-		
-	//paglalagay ng values into thread arguments' variables	
-	for(i = 0; i < t; i++){
 		th_data[i].t_id = i;
 		th_data[i].n = n;
-		th_data[i].t = t;
-		for(row = 0; row < n; row++){
-			for(col = 0; col < n/t; col++){
-				th_data[i].submat[i][row][col] = submatrix[i][row][col];
-			}
-		}
-		//v = pthread_create(&thread[i], NULL, column_sum, &th_data[i]);
+		th_data[i].nSubmatrix = nSubmatrix;
+		th_data[i].submat = &submatrix[i];
 	}
 
+	// for(i = 0; i < t; i++){
+	// 	printf("id: %d\n", th_data[i].t_id);
+	// 	printf("n: %d\n", th_data[i].n);
+	// 	printf("sub: %d\n", th_data[i].nSubmatrix);
+	// 	for(row = 0; row < n; row++){
+	// 		for(col = 0; col < nSubmatrix; col++){
+	// 			printf("%d", (*th_data[i].submat)[row][col]);
+	// 		} printf("\n");
+	// 	}
+	// }
 
-	//Print matrix
-	for(row = 0; row < n; row++){
-		for(col = 0; col < n; col++){
-			printf("%3d", m[row][col]);
-		}
-		printf("\n");
+	begin = clock();
+	for(i = 0; i < t; i++){
+		pthread_create(&thread[i], NULL, column_sum, (void *)&th_data[i]);
+
 	}
 
-	//Print submatrix
-	int p,q,r;
-	for(p = 0; p < t; p++){
-		for(q = 0; q < n; q++){
-			for(r = 0; r < n/t; r++){
-				printf("%3d", submatrix[p][q][r]);
-			}
-			printf("\n");
-		}
-		printf("\n");
+	for(i = 0; i < t; i++){
+		pthread_join(thread[i], NULL);
 	}
+	end =  clock();
+
+	// copy value to local v
+	for(i = 0; i < t; i++){
+		for(j = 0; j < nSubmatrix; j++) {
+			v[i][j] = th_data[i].v[j];
+		}
+	}
+
+	elapsed = (double) (end - begin) / CLOCKS_PER_SEC;	//column_sum timing
+
+	printf("Elapsed: %f sec\n", elapsed);
 
 	//Print sums
-	for(i = 0; i < n; i++){
-		printf("%3d", v[i]);
-	}
-	printf("\n");
+	// for(i = 0; i < t; i++){
+	// 	for(j = 0; j < nSubmatrix; j++) {
+	// 		if(v[i][j]!=0) printf("%3d", v[i][j]);
+	// 	}
+	// }
+	// printf("\n");
 
-	//pang check if tama ba napupunta sa thread arguments
-	printf("=================================\n");
-	for(i = 0; i < t; i++){
-		printf("%d\n", th_data[i].t_id);
-		printf("%d\n", th_data[i].n);
-		printf("%d\n", th_data[i].t);
-		for(p = 0; p < n; p++){
-			for(q = 0; p < n/t; p++){
-				printf("%3d", submatrix[i][p][q]);
-			}
-			printf("\n");
-		}
-		printf("\n");
-	}
 
 	//Free memory
 	for(i = 0; i < n; i++){
@@ -149,4 +166,6 @@ void main(){
 	}
 	free(m);
 	free(v);
+
+	pthread_exit(NULL);
 }
