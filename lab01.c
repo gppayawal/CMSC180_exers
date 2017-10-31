@@ -23,6 +23,8 @@ void main(){
 	int **m; //main matrix
 	int *v;	//array of column sums
 	int i, row, col;
+	clock_t begin, end;
+	double elapsed;
 
 	printf("Enter size of matrix: ");
 	scanf("%d", &n);
@@ -55,10 +57,10 @@ void main(){
 		printf("\n");
 	}*/
 
-	clock_t begin = clock();
+	begin = clock();
 	v = column_sum(m, n);
-	clock_t end =  clock();
-	double elapsed = (double) (end - begin) / CLOCKS_PER_SEC;	//column_sum timing
+	end =  clock();
+	elapsed = (double) (end - begin) / CLOCKS_PER_SEC;	//column_sum timing
 
 	printf("Elapsed: %f sec\n", elapsed);
 }
