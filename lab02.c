@@ -97,7 +97,7 @@ void main(){
 	// 	}
 	// 	printf("\n");
 	// }
-
+	//
 	//Print submatrix
 	// int p,q,r;
 	// for(p = 0; p < t; p++){
@@ -132,7 +132,6 @@ void main(){
 	begin = clock();
 	for(i = 0; i < t; i++){
 		pthread_create(&thread[i], NULL, column_sum, (void *)&th_data[i]);
-
 	}
 
 	for(i = 0; i < t; i++){
@@ -142,9 +141,7 @@ void main(){
 
 	// copy value to local v
 	for(i = 0; i < t; i++){
-		for(j = 0; j < nSubmatrix; j++) {
-			v[i][j] = th_data[i].v[j];
-		}
+			v[i] = (&th_data[i])->v;
 	}
 
 	elapsed = (double) (end - begin) / CLOCKS_PER_SEC;	//column_sum timing
@@ -159,13 +156,12 @@ void main(){
 	// }
 	// printf("\n");
 
-
 	//Free memory
 	for(i = 0; i < n; i++){
 		free(m[i]);
 	}
 	free(m);
-	free(v);
+	// free(v);
 
 	pthread_exit(NULL);
 }
