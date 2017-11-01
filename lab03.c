@@ -152,9 +152,7 @@ void main(){
 
 	// copy value to local v
 	for(i = 0; i < t; i++){
-		for(j = 0; j < nSubmatrix; j++) {
-			v[i][j] = th_data[i].v[j];
-		}
+			v[i] = (&th_data[i])->v;
 	}
 
 	elapsed = (double) (end - begin) / CLOCKS_PER_SEC;	//column_sum timing
@@ -175,7 +173,7 @@ void main(){
 		free(m[i]);
 	}
 	free(m);
-	free(v);
+	//free(v);
 
 	pthread_exit(NULL);
 }
