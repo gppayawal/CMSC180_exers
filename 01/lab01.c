@@ -49,14 +49,6 @@ void main(){
 		}
 	}
 
-	/* Matrix print
-	for(row = 0; row < n; row++){
-		for(col = 0; col < n; col++){
-			printf("%3d", m[row][col]);
-		}
-		printf("\n");
-	}*/
-
 	begin = clock();
 	v = column_sum(m, n);
 	end =  clock();
